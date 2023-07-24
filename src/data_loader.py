@@ -16,6 +16,35 @@ def load_data(args):
     item_triple_sets = kg_propagation(args, kg, item_init_entity_set, args.item_triple_set_size, False)
     return train_data, eval_data, test_data, n_entity, n_relation, user_triple_sets, item_triple_sets
 
+def preprocess_data(args):
+    logging.info("================== preprocessing data ===================")
+    infer_data, user_init_entity_set, item_init_entity_set = preprocess_rating(args)
+    n_entity, n_relation, kg = load_kg(args)
+    logging.info("contructing users' kg triple sets ...")
+    user_triple_sets = kg_propagation(args, kg, user_init_entity_set, args.user_triple_set_size, True)
+    logging.info("contructing items' kg triple sets ...")
+    item_triple_sets = kg_propagation(args, kg, item_init_entity_set, args.item_triple_set_size, False)
+    return infer_data, n_entity, n_relation, user_triple_sets, item_triple_sets
+    
+
+def preprocess_rating(args):
+    rating_file = '../data/' + args.dataset + '/ratings_infer'
+    logging.info("load rating file: %s.npy", rating_file)
+    if os.path.exists(rating_file + '.npy'):
+        rating_np = np.load(rating_file + '.npy')
+    else:
+        rating_np = np.loadtxt(rating_file + '.txt', dtype=np.int32)
+        np.save(rating_file + '.npy', rating_np)
+        
+    n_ratings = rating_np.shape[0]
+    logging.info(f"number of ratings: {n_ratings}")
+    indices = list(set(range(n_ratings)))
+    user_init_entity_set, item_init_entity_set = collaboration_propagation(rating_np, indices)
+    indices = [i for i in indices if rating_np[i][0] in user_init_entity_set.keys()]
+    infer_data = rating_np[indices]
+    
+    return infer_data, user_init_entity_set, item_init_entity_set
+    
 
 def load_rating(args):
     rating_file = '../data/' + args.dataset + '/ratings_final'

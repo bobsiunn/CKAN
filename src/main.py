@@ -1,8 +1,9 @@
 import argparse
 import torch
 import numpy as np
-from data_loader import load_data
-from train import train
+from data_loader import load_data, preprocess_data
+from CKAN_function import train, inference
+from pynvml import *
 
 parser = argparse.ArgumentParser()
 parser.add_argument('-d', '--dataset', type=str, default='music', help='which dataset to use (music, book, movie, restaurant)')
@@ -23,7 +24,14 @@ parser.add_argument('--random_flag', type=bool, default=False, help='whether usi
 
 args = parser.parse_args()
 
+nvmlInit()
+print("Driver Version:", nvmlSystemGetDriverVersion())
+deviceCount = nvmlDeviceGetCount()
 
+for i in range(deviceCount):
+    handle = nvmlDeviceGetHandleByIndex(i)
+    print("Device", i, ":", nvmlDeviceGetName(handle))
+    
 def set_random_seed(np_seed, torch_seed):
     np.random.seed(np_seed)                  
     torch.manual_seed(torch_seed)       
@@ -33,6 +41,10 @@ def set_random_seed(np_seed, torch_seed):
 if not args.random_flag:
     set_random_seed(304, 2019)
     
-data_info = load_data(args)
-train(args, data_info)
-    
+# data_info = load_data(args)
+# train(args, data_info)
+handle = nvmlDeviceGetHandleByIndex(0)
+print(nvmlDeviceGetTotalEnergyConsumption(handle)/1000)
+data_info = preprocess_data(args)
+inference(args, data_info)
+print(nvmlDeviceGetTotalEnergyConsumption(handle)/1000)
