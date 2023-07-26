@@ -4,6 +4,7 @@ import torch.nn as nn
 from sklearn.metrics import roc_auc_score, f1_score
 from model import CKAN
 import logging
+from pyJoules.energy_meter import measure_energy
 
 logging.basicConfig(format="[%(asctime)s] %(levelname)s: %(message)s", level=logging.INFO)
 
@@ -42,8 +43,10 @@ def train(args, data_info):
         if args.show_topk:
             topk_eval(args, model, train_data, test_data, user_triple_set, item_triple_set)
     
-    torch.save(model, './ckan.pt')
+    PATH = f'./ckan{args.n_layer}.pt'
+    torch.save(model, PATH)
 
+@measure_energy
 def inference(args, data_info):
     logging.info("================== inferencing CKAN ====================")
     infer_data = data_info[0]
@@ -51,7 +54,7 @@ def inference(args, data_info):
     item_triple_set = data_info[4]
     
     logging.info("model loading from trained CKAN...")
-    model = torch.load('./ckan.pt')
+    model = torch.load(f'./ckan{args.n_layer}.pt')
     
     logging.info("processing topK recommendation...")
     topk_recommendation(args, model, infer_data, user_triple_set, item_triple_set)

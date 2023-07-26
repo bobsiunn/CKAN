@@ -2,6 +2,7 @@ import collections
 import os
 import numpy as np
 import logging
+from pyJoules.energy_meter import measure_energy
 
 logging.basicConfig(format="[%(asctime)s] %(levelname)s: %(message)s", level=logging.INFO)
 
@@ -16,6 +17,7 @@ def load_data(args):
     item_triple_sets = kg_propagation(args, kg, item_init_entity_set, args.item_triple_set_size, False)
     return train_data, eval_data, test_data, n_entity, n_relation, user_triple_sets, item_triple_sets
 
+@measure_energy
 def preprocess_data(args):
     logging.info("================== preprocessing data ===================")
     infer_data, user_init_entity_set, item_init_entity_set = preprocess_rating(args)
@@ -28,7 +30,7 @@ def preprocess_data(args):
     
 
 def preprocess_rating(args):
-    rating_file = '../data/' + args.dataset + '/ratings_infer'
+    rating_file = '../data/' + args.dataset + '/ratings_infer' + str(args.nru)
     logging.info("load rating file: %s.npy", rating_file)
     if os.path.exists(rating_file + '.npy'):
         rating_np = np.load(rating_file + '.npy')

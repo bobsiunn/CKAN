@@ -8,6 +8,7 @@ from pynvml import *
 parser = argparse.ArgumentParser()
 parser.add_argument('-d', '--dataset', type=str, default='music', help='which dataset to use (music, book, movie, restaurant)')
 parser.add_argument('--n_epoch', type=int, default=20, help='the number of epochs')
+parser.add_argument('--nru', type=int, default=5, help='the number of recommendation update')
 parser.add_argument('--batch_size', type=int, default=2048, help='batch size')
 parser.add_argument('--n_layer', type=int, default=3, help='depth of layer')
 parser.add_argument('--lr', type=float, default=0.002, help='learning rate')
@@ -18,19 +19,14 @@ parser.add_argument('--user_triple_set_size', type=int, default=8, help='the num
 parser.add_argument('--item_triple_set_size', type=int, default=64, help='the number of triples in triple set of item')
 parser.add_argument('--agg', type=str, default='concat', help='the type of aggregator (sum, pool, concat)')
 
+parser.add_argument('--training', type=bool, default=False, help='if true train model')
 parser.add_argument('--use_cuda', type=bool, default=True, help='whether using gpu or cpu')
 parser.add_argument('--show_topk', type=bool, default=False, help='whether showing topk or not')
 parser.add_argument('--random_flag', type=bool, default=False, help='whether using random seed or not')
 
+
 args = parser.parse_args()
 
-nvmlInit()
-print("Driver Version:", nvmlSystemGetDriverVersion())
-deviceCount = nvmlDeviceGetCount()
-
-for i in range(deviceCount):
-    handle = nvmlDeviceGetHandleByIndex(i)
-    print("Device", i, ":", nvmlDeviceGetName(handle))
     
 def set_random_seed(np_seed, torch_seed):
     np.random.seed(np_seed)                  
@@ -40,11 +36,10 @@ def set_random_seed(np_seed, torch_seed):
 
 if not args.random_flag:
     set_random_seed(304, 2019)
-    
-# data_info = load_data(args)
-# train(args, data_info)
-handle = nvmlDeviceGetHandleByIndex(0)
-print(nvmlDeviceGetTotalEnergyConsumption(handle)/1000)
-data_info = preprocess_data(args)
-inference(args, data_info)
-print(nvmlDeviceGetTotalEnergyConsumption(handle)/1000)
+
+if args.training: 
+    data_info = load_data(args)
+    train(args, data_info)
+else:
+    data_info = preprocess_data(args)
+    inference(args, data_info)
