@@ -43,7 +43,7 @@ def train(args, data_info):
         if args.show_topk:
             topk_eval(args, model, train_data, test_data, user_triple_set, item_triple_set)
     
-    PATH = f'./ckan{args.n_layer}.pt'
+    PATH = f'../saved/ckan{args.n_layer}.pt'
     torch.save(model, PATH)
 
 @measure_energy
